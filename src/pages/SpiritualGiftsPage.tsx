@@ -12,7 +12,7 @@ const TOTAL_QUESTIONS = spiritualGiftQuestions.length;
 export function SpiritualGiftsPage() {
   const navigate = useNavigate();
   const { currentAssessment } = useAssessment();
-  const { save, saveImmediate } = useAutoSave(currentAssessment?.id);
+  const { saveImmediate } = useAutoSave(currentAssessment?.id);
 
   const answers = useMemo(() => currentAssessment?.spiritualGifts.answers ?? {}, [currentAssessment?.spiritualGifts.answers]);
   const answeredCount = Object.keys(answers).length;
@@ -47,8 +47,8 @@ export function SpiritualGiftsPage() {
 
       const newStatus = isComplete ? "complete" : "in_progress";
 
-      // Save the answer
-      save({
+      // Save every answer immediately so nothing is lost on app close
+      saveImmediate({
         spiritualGifts: {
           status: newStatus,
           answers: newAnswers,
@@ -61,18 +61,11 @@ export function SpiritualGiftsPage() {
         if (currentIndex < TOTAL_QUESTIONS - 1) {
           setCurrentIndex((prev) => prev + 1);
         } else if (isComplete) {
-          // All questions answered, save immediately and navigate to results
-          saveImmediate({
-            spiritualGifts: {
-              status: "complete",
-              answers: newAnswers,
-            },
-          });
           navigate("/assessment/spiritual-gifts/results");
         }
       }, 300);
     },
-    [question, answers, currentIndex, save, saveImmediate, navigate],
+    [question, answers, currentIndex, saveImmediate, navigate],
   );
 
   const handleBack = useCallback(() => {
