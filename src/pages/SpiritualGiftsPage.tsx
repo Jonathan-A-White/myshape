@@ -14,7 +14,12 @@ export function SpiritualGiftsPage() {
   const { currentAssessment } = useAssessment();
   const { save, saveImmediate } = useAutoSave(currentAssessment?.id);
 
-  const answers = useMemo(() => currentAssessment?.spiritualGifts.answers ?? {}, [currentAssessment?.spiritualGifts.answers]);
+  const dbAnswers = useMemo(() => currentAssessment?.spiritualGifts.answers ?? {}, [currentAssessment?.spiritualGifts.answers]);
+
+  // Local ref accumulates answers so rapid responses don't overwrite each other.
+  // The DB-derived answers are merged in so we never lose data from either source.
+  const localAnswersRef = useRef<Record<string, number>>({});
+  const answers = useMemo(() => ({ ...dbAnswers, ...localAnswersRef.current }), [dbAnswers]);
   const answeredCount = Object.keys(answers).length;
 
   // Find the first unanswered question index, or last question if all answered
@@ -41,7 +46,9 @@ export function SpiritualGiftsPage() {
     (value: number) => {
       if (!question) return;
 
-      const newAnswers = { ...answers, [String(question.id)]: value };
+      // Accumulate in local ref so subsequent answers include prior unsaved ones
+      localAnswersRef.current = { ...localAnswersRef.current, [String(question.id)]: value };
+      const newAnswers = { ...dbAnswers, ...localAnswersRef.current };
       const newAnsweredCount = Object.keys(newAnswers).length;
       const isComplete = newAnsweredCount >= TOTAL_QUESTIONS;
 
@@ -72,7 +79,7 @@ export function SpiritualGiftsPage() {
         }
       }, 300);
     },
-    [question, answers, currentIndex, save, saveImmediate, navigate],
+    [question, dbAnswers, currentIndex, save, saveImmediate, navigate],
   );
 
   const handleBack = useCallback(() => {
