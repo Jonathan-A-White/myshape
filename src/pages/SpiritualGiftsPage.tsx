@@ -21,6 +21,7 @@ export function SpiritualGiftsPage() {
   const firstUnanswered = spiritualGiftQuestions.findIndex(
     (q) => answers[String(q.id)] === undefined,
   );
+  const sequentialProgress = firstUnanswered === -1 ? TOTAL_QUESTIONS : firstUnanswered;
   const initialIndex = firstUnanswered === -1 ? TOTAL_QUESTIONS - 1 : firstUnanswered;
 
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
@@ -107,7 +108,7 @@ export function SpiritualGiftsPage() {
         {/* Progress section */}
         <div className="mb-6">
           <ProgressBar
-            current={answeredCount}
+            current={sequentialProgress}
             total={TOTAL_QUESTIONS}
             label={`Question ${currentIndex + 1} of ${TOTAL_QUESTIONS}`}
           />

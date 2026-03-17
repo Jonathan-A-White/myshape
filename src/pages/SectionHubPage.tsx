@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { LoadingSpinner } from "@/components/feedback/LoadingSpinner";
 import { useAssessment } from "@/contexts/AssessmentContext";
+import { spiritualGiftQuestions } from "@/core/staticData";
 import type { SectionStatus } from "@/contracts/types";
 
 interface SectionCard {
@@ -53,7 +54,11 @@ export function SectionHubPage() {
     return null;
   }
 
-  const answerCount = Object.keys(currentAssessment.spiritualGifts.answers).length;
+  const sgAnswers = currentAssessment.spiritualGifts.answers;
+  const firstUnansweredSg = spiritualGiftQuestions.findIndex(
+    (q) => sgAnswers[String(q.id)] === undefined,
+  );
+  const answerCount = firstUnansweredSg === -1 ? spiritualGiftQuestions.length : firstUnansweredSg;
   const selectedCount = currentAssessment.abilities.selected.length;
   const groupCount = Object.keys(currentAssessment.personality.groups).length;
 
