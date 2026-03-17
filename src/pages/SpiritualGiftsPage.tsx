@@ -12,14 +12,9 @@ const TOTAL_QUESTIONS = spiritualGiftQuestions.length;
 export function SpiritualGiftsPage() {
   const navigate = useNavigate();
   const { currentAssessment } = useAssessment();
-  const { save, saveImmediate } = useAutoSave(currentAssessment?.id);
+  const { saveImmediate } = useAutoSave(currentAssessment?.id);
 
-  const dbAnswers = useMemo(() => currentAssessment?.spiritualGifts.answers ?? {}, [currentAssessment?.spiritualGifts.answers]);
-
-  // Local ref accumulates answers so rapid responses don't overwrite each other.
-  // The DB-derived answers are merged in so we never lose data from either source.
-  const localAnswersRef = useRef<Record<string, number>>({});
-  const answers = useMemo(() => ({ ...dbAnswers, ...localAnswersRef.current }), [dbAnswers]);
+  const answers = useMemo(() => currentAssessment?.spiritualGifts.answers ?? {}, [currentAssessment?.spiritualGifts.answers]);
   const answeredCount = Object.keys(answers).length;
 
   // Find the first unanswered question index, or last question if all answered
@@ -46,16 +41,14 @@ export function SpiritualGiftsPage() {
     (value: number) => {
       if (!question) return;
 
-      // Accumulate in local ref so subsequent answers include prior unsaved ones
-      localAnswersRef.current = { ...localAnswersRef.current, [String(question.id)]: value };
-      const newAnswers = { ...dbAnswers, ...localAnswersRef.current };
+      const newAnswers = { ...answers, [String(question.id)]: value };
       const newAnsweredCount = Object.keys(newAnswers).length;
       const isComplete = newAnsweredCount >= TOTAL_QUESTIONS;
 
       const newStatus = isComplete ? "complete" : "in_progress";
 
-      // Save the answer
-      save({
+      // Save every answer immediately so nothing is lost on app close
+      saveImmediate({
         spiritualGifts: {
           status: newStatus,
           answers: newAnswers,
@@ -68,18 +61,11 @@ export function SpiritualGiftsPage() {
         if (currentIndex < TOTAL_QUESTIONS - 1) {
           setCurrentIndex((prev) => prev + 1);
         } else if (isComplete) {
-          // All questions answered, save immediately and navigate to results
-          saveImmediate({
-            spiritualGifts: {
-              status: "complete",
-              answers: newAnswers,
-            },
-          });
           navigate("/assessment/spiritual-gifts/results");
         }
       }, 300);
     },
-    [question, dbAnswers, currentIndex, save, saveImmediate, navigate],
+    [question, answers, currentIndex, saveImmediate, navigate],
   );
 
   const handleBack = useCallback(() => {
