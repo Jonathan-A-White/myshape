@@ -1,0 +1,35 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --color-primary: #1a1a2e;
+  --color-primary-light: #16213e;
+  --color-surface: #f8f9fa;
+  --color-danger: #dc2626;
+  --color-gift-high: #059669;
+  --color-gift-mid: #d97706;
+  --color-gift-low: #6b7280;
+  --color-disc-d: #ef4444;
+  --color-disc-i: #f59e0b;
+  --color-disc-s: #10b981;
+  --color-disc-c: #3b82f6;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  overflow: hidden;
+}
+
+#root {
+  height: 100svh;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+}
