@@ -66,7 +66,9 @@ export function SectionHubPage() {
     {
       letter: "S",
       name: "Spiritual Gifts",
-      path: "/assessment/spiritual-gifts",
+      path: currentAssessment.spiritualGifts.status === "complete"
+        ? "/assessment/spiritual-gifts/results"
+        : "/assessment/spiritual-gifts",
       status: currentAssessment.spiritualGifts.status,
       detail: `${answerCount} / 95 answers`,
     },
@@ -87,7 +89,9 @@ export function SectionHubPage() {
     {
       letter: "P",
       name: "Personality",
-      path: "/assessment/personality",
+      path: currentAssessment.personality.status === "complete"
+        ? "/assessment/personality/results"
+        : "/assessment/personality",
       status: currentAssessment.personality.status,
       detail: `${groupCount} / 24 groups`,
     },
