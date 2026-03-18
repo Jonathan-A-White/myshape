@@ -24,7 +24,7 @@ export function calculateGiftScores(
 
   // Mark top 3
   const top3Letters = new Set(sorted.slice(0, 3).map((s) => s.gift.letter));
-  return scores.map((s) => ({
+  return sorted.map((s) => ({
     ...s,
     isTop3: top3Letters.has(s.gift.letter),
   }));
