@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { TextArea } from "@/components/forms/TextArea";
@@ -27,57 +27,79 @@ export function HeartPage() {
   const { save, saveImmediate } = useAutoSave(currentAssessment?.id);
 
   const heart = currentAssessment?.heart;
+  const heartRef = useRef(heart);
+  heartRef.current = heart;
 
   const [step, setStep] = useState(0);
 
-  const getReflectionValue = (questionId: string): string => {
-    if (!heart) return "";
-    return heart.reflectionQuestions[questionId as keyof typeof heart.reflectionQuestions] ?? "";
-  };
+  // Local state for the current text input to decouple typing from DB round-trips
+  const [localText, setLocalText] = useState("");
+  const currentQuestionId = step < 4 ? heartReflectionQuestions[step].id : null;
 
-  const updateReflection = useCallback(
-    (questionId: string, value: string) => {
-      if (!heart) return;
+  // Sync local text when step changes or when heart data loads initially
+  const prevStepRef = useRef(step);
+  const initializedRef = useRef(false);
+  useEffect(() => {
+    if (!heart) return;
+    if (!initializedRef.current || prevStepRef.current !== step) {
+      const qId = step < 4 ? heartReflectionQuestions[step].id : null;
+      if (qId) {
+        setLocalText(
+          heart.reflectionQuestions[qId as keyof typeof heart.reflectionQuestions] ?? "",
+        );
+      }
+      prevStepRef.current = step;
+      initializedRef.current = true;
+    }
+  }, [step, heart]);
+
+  const handleTextChange = useCallback(
+    (value: string) => {
+      setLocalText(value);
+      const h = heartRef.current;
+      if (!h || !currentQuestionId) return;
       const updated: HeartData = {
-        ...heart,
+        ...h,
         status: "in_progress",
         reflectionQuestions: {
-          ...heart.reflectionQuestions,
-          [questionId]: value,
+          ...h.reflectionQuestions,
+          [currentQuestionId]: value,
         },
       };
       save({ heart: updated });
     },
-    [heart, save],
+    [currentQuestionId, save],
   );
 
   const updatePeopleToServe = useCallback(
     (selected: string[]) => {
-      if (!heart) return;
+      const h = heartRef.current;
+      if (!h) return;
       const updated: HeartData = {
-        ...heart,
+        ...h,
         status: "in_progress",
         peopleToServe: selected,
       };
       save({ heart: updated });
     },
-    [heart, save],
+    [save],
   );
 
   const updateIssuesAndCauses = useCallback(
     (selected: string[]) => {
-      if (!heart) return;
+      const h = heartRef.current;
+      if (!h) return;
       const updated: HeartData = {
-        ...heart,
+        ...h,
         status: "in_progress",
         issuesAndCauses: selected,
       };
       save({ heart: updated });
     },
-    [heart, save],
+    [save],
   );
 
-  const computeProgress = (): number => {
+  const progress = useMemo(() => {
     if (!heart) return 0;
     let filled = 0;
     for (const q of heartReflectionQuestions) {
@@ -88,11 +110,7 @@ export function HeartPage() {
     if (heart.peopleToServe.length === 3) filled++;
     if (heart.issuesAndCauses.length === 3) filled++;
     return filled;
-  };
-
-  const isComplete = (): boolean => {
-    return computeProgress() === TOTAL_STEPS;
-  };
+  }, [heart]);
 
   const handleNext = () => {
     if (step < TOTAL_STEPS - 1) {
@@ -134,7 +152,7 @@ export function HeartPage() {
       <div className="flex-1 p-4">
         {/* Progress */}
         <div className="mb-6">
-          <ProgressBar current={computeProgress()} total={TOTAL_STEPS} label={`Step ${step + 1} of ${TOTAL_STEPS}`} />
+          <ProgressBar current={progress} total={TOTAL_STEPS} label={`Step ${step + 1} of ${TOTAL_STEPS}`} />
         </div>
 
         {/* Step title */}
@@ -146,8 +164,8 @@ export function HeartPage() {
         {step < 4 && (
           <div className="mx-auto max-w-lg">
             <TextArea
-              value={getReflectionValue(heartReflectionQuestions[step].id)}
-              onChange={(value) => updateReflection(heartReflectionQuestions[step].id, value)}
+              value={localText}
+              onChange={handleTextChange}
               placeholder="Type your answer here..."
             />
           </div>
@@ -205,7 +223,7 @@ export function HeartPage() {
           ) : (
             <button
               onClick={handleComplete}
-              disabled={!isComplete()}
+              disabled={progress !== TOTAL_STEPS}
               className="rounded-lg bg-primary px-6 py-2 text-sm font-medium text-white transition-colors hover:bg-primary/90 disabled:opacity-50"
             >
               Complete Section

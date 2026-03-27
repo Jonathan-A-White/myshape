@@ -1,3 +1,5 @@
+import { memo } from "react";
+
 interface TextAreaProps {
   value: string;
   onChange: (value: string) => void;
@@ -5,7 +7,7 @@ interface TextAreaProps {
   label?: string;
 }
 
-export function TextArea({ value, onChange, placeholder, label }: TextAreaProps) {
+export const TextArea = memo(function TextArea({ value, onChange, placeholder, label }: TextAreaProps) {
   return (
     <div className="w-full">
       {label && <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">{label}</label>}
@@ -18,4 +20,4 @@ export function TextArea({ value, onChange, placeholder, label }: TextAreaProps)
       />
     </div>
   );
-}
+});
