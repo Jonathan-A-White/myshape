@@ -118,7 +118,7 @@ export function LandingPage() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center px-6 text-center dark:bg-gray-900">
+    <div className="flex min-h-full flex-col items-center justify-center px-6 text-center dark:bg-gray-900">
       <h1 className="mb-4 text-4xl font-bold text-primary dark:text-white">
         Welcome to MySHAPE
       </h1>

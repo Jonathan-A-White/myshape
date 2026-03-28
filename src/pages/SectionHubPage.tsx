@@ -44,7 +44,7 @@ export function SectionHubPage() {
 
   if (isLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
+      <div className="flex min-h-full items-center justify-center">
         <LoadingSpinner size="lg" />
       </div>
     );

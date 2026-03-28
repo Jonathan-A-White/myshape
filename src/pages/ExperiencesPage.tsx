@@ -107,7 +107,7 @@ export function ExperiencesPage() {
   const question = experienceQuestions[currentStep];
 
   return (
-    <div className="flex min-h-screen flex-col bg-gray-50 dark:bg-gray-900">
+    <div className="flex min-h-full flex-col bg-gray-50 dark:bg-gray-900">
       <PageHeader title="Experiences" backTo="/assessment" />
 
       <div className="flex flex-1 flex-col px-4 py-6">

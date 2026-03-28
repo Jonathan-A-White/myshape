@@ -94,7 +94,7 @@ export function SpiritualGiftsPage() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col">
+    <div className="flex min-h-full flex-col">
       <PageHeader title="Spiritual Gifts" backTo="/assessment" />
 
       <div className="flex flex-1 flex-col px-4 py-6">
