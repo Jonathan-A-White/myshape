@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { ProgressBar } from "@/components/data-display/ProgressBar";
@@ -9,16 +9,56 @@ import { useAutoSave } from "@/hooks/useAutoSave";
 
 const TOTAL_GROUPS = personalityTraitGroups.length;
 
+function findResumeIndex(groups: Record<string, { most: number; least: number }>): number {
+  const completedCount = Object.keys(groups).length;
+  if (completedCount === 0) return 0;
+  // Find the first incomplete group
+  for (let i = 0; i < TOTAL_GROUPS; i++) {
+    if (!groups[String(personalityTraitGroups[i].id)]) return i;
+  }
+  // All done, stay on last group
+  return TOTAL_GROUPS - 1;
+}
+
 export function PersonalityPage() {
   const navigate = useNavigate();
   const { currentAssessment } = useAssessment();
   const { save, saveImmediate } = useAutoSave(currentAssessment?.id);
 
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const groups = useMemo(() => currentAssessment?.personality?.groups ?? {}, [currentAssessment?.personality?.groups]);
+  // Track groups in local state to avoid stale reads from the DB during rapid selections
+  const [groups, setGroups] = useState<Record<string, { most: number; least: number }>>(
+    () => currentAssessment?.personality?.groups ?? {},
+  );
+  const groupsRef = useRef(groups);
+  useEffect(() => {
+    groupsRef.current = groups;
+  }, [groups]);
+
+  const [currentIndex, setCurrentIndex] = useState<number | null>(null);
+
+  // Sync from DB when assessment first becomes available (set-state-during-render pattern)
+  const [syncedId, setSyncedId] = useState<string | undefined>(undefined);
+  if (currentAssessment && currentAssessment.id !== syncedId) {
+    const dbGroups = currentAssessment.personality?.groups ?? {};
+    setGroups(dbGroups);
+    setCurrentIndex(findResumeIndex(dbGroups));
+    setSyncedId(currentAssessment.id);
+  }
 
   if (currentAssessment && currentAssessment.personality.status === "not_started") {
     saveImmediate({ personality: { ...currentAssessment.personality, status: "in_progress" } });
+  }
+
+  // Show loading until index is ready
+  if (currentIndex === null || !currentAssessment) {
+    return (
+      <div>
+        <PageHeader title="Personality" backTo="/assessment" />
+        <div className="p-6 text-center text-gray-500 dark:text-gray-400">
+          {currentAssessment ? "Loading..." : "No active assessment found."}
+        </div>
+      </div>
+    );
   }
 
   const currentGroup = personalityTraitGroups[currentIndex];
@@ -31,36 +71,37 @@ export function PersonalityPage() {
   // Count completed groups
   const completedCount = Object.keys(groups).length;
 
-  const handleChange = useCallback(
-    (most: number | undefined, least: number | undefined) => {
-      if (most !== undefined && least !== undefined) {
-        const updated = { ...groups, [groupKey]: { most, least } };
-        save({ personality: { status: "in_progress" as const, groups: updated } });
+  const handleChange = (most: number | undefined, least: number | undefined) => {
+    if (most !== undefined && least !== undefined) {
+      const updated = { ...groupsRef.current, [groupKey]: { most, least } };
+      setGroups(updated);
+      groupsRef.current = updated;
+      save({ personality: { status: "in_progress" as const, groups: updated } });
 
-        // Auto-advance after 300ms
-        setTimeout(() => {
-          if (currentIndex < TOTAL_GROUPS - 1) {
-            setCurrentIndex((prev) => prev + 1);
-          } else {
-            // All groups done - check completion
-            const allDone = Object.keys(updated).length >= TOTAL_GROUPS;
-            if (allDone) {
-              saveImmediate({ personality: { status: "complete", groups: updated } });
-              navigate("/assessment/personality/results");
-            }
+      // Auto-advance after 300ms
+      setTimeout(() => {
+        if (currentIndex < TOTAL_GROUPS - 1) {
+          setCurrentIndex((prev) => (prev ?? 0) + 1);
+        } else {
+          // All groups done - check completion
+          const allDone = Object.keys(updated).length >= TOTAL_GROUPS;
+          if (allDone) {
+            saveImmediate({ personality: { status: "complete", groups: updated } });
+            navigate("/assessment/personality/results");
           }
-        }, 300);
-      } else {
-        // Partial selection or deselection - remove from groups if incomplete
-        if (most === undefined || least === undefined) {
-          const updated = { ...groups };
-          delete updated[groupKey];
-          save({ personality: { status: "in_progress" as const, groups: updated } });
         }
+      }, 300);
+    } else {
+      // Partial selection or deselection - remove from groups if incomplete
+      if (most === undefined || least === undefined) {
+        const updated = { ...groupsRef.current };
+        delete updated[groupKey];
+        setGroups(updated);
+        groupsRef.current = updated;
+        save({ personality: { status: "in_progress" as const, groups: updated } });
       }
-    },
-    [groups, groupKey, currentIndex, save, saveImmediate, navigate],
-  );
+    }
+  };
 
   const goBack = () => {
     if (currentIndex > 0) {
@@ -73,17 +114,6 @@ export function PersonalityPage() {
       setCurrentIndex(currentIndex + 1);
     }
   };
-
-  if (!currentAssessment) {
-    return (
-      <div>
-        <PageHeader title="Personality" backTo="/assessment" />
-        <div className="p-6 text-center text-gray-500 dark:text-gray-400">
-          No active assessment found.
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div>
