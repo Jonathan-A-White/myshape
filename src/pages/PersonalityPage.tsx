@@ -93,8 +93,8 @@ export function PersonalityPage() {
         }
       }, 300);
     } else {
-      // Partial selection or deselection - remove from groups if incomplete
-      if (most === undefined || least === undefined) {
+      // Partial selection or deselection - only update if a previously completed group is now incomplete
+      if (groupsRef.current[groupKey]) {
         const updated = { ...groupsRef.current };
         delete updated[groupKey];
         setGroups(updated);

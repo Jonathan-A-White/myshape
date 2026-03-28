@@ -1,3 +1,5 @@
+import { useState } from "react";
+
 interface TraitGroupSelectorProps {
   traits: string[];
   most: number | undefined;
@@ -5,24 +7,30 @@ interface TraitGroupSelectorProps {
   onChange: (most: number | undefined, least: number | undefined) => void;
 }
 
-export function TraitGroupSelector({ traits, most, least, onChange }: TraitGroupSelectorProps) {
+export function TraitGroupSelector({ traits, most: initialMost, least: initialLeast, onChange }: TraitGroupSelectorProps) {
+  const [most, setMost] = useState<number | undefined>(initialMost);
+  const [least, setLeast] = useState<number | undefined>(initialLeast);
+
   const handleClick = (index: number) => {
+    let newMost = most;
+    let newLeast = least;
+
     if (most === undefined) {
-      // First pick = Most
-      onChange(index, least);
+      newMost = index;
     } else if (least === undefined && index !== most) {
-      // Second pick = Least (can't be same as most)
-      onChange(most, index);
+      newLeast = index;
     } else if (index === most) {
-      // Clicking most again deselects it
-      onChange(undefined, least);
+      newMost = undefined;
     } else if (index === least) {
-      // Clicking least again deselects it
-      onChange(most, undefined);
+      newLeast = undefined;
     } else {
-      // Both already set, clicking a third deselects both and starts over
-      onChange(index, undefined);
+      newMost = index;
+      newLeast = undefined;
     }
+
+    setMost(newMost);
+    setLeast(newLeast);
+    onChange(newMost, newLeast);
   };
 
   return (
