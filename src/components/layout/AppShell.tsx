@@ -4,7 +4,7 @@ import { Toast } from "@/components/feedback/Toast";
 
 export function AppShell() {
   return (
-    <div className="flex min-h-screen flex-col bg-surface dark:bg-gray-900">
+    <div className="flex min-h-full flex-col bg-surface dark:bg-gray-900">
       <main className="flex-1 pb-16">
         <Outlet />
       </main>

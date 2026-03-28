@@ -145,7 +145,7 @@ export function HeartPage() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-gray-50 dark:bg-gray-900">
+    <div className="flex min-h-full flex-col bg-gray-50 dark:bg-gray-900">
       <PageHeader title="Heart" backTo="/assessment" />
 
       <div className="flex-1 p-4">

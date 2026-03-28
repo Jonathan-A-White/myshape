@@ -26,7 +26,7 @@ export function SpiritualGiftsResultsPage() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col">
+    <div className="flex min-h-full flex-col">
       <PageHeader
         title="Spiritual Gifts Results"
         backTo="/assessment/spiritual-gifts"
