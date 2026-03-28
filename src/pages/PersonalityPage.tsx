@@ -52,6 +52,11 @@ export function PersonalityPage() {
     }
   }, [currentAssessment, saveImmediate]);
 
+  // Count completed groups (must be before early return to satisfy Rules of Hooks)
+  const completedKeys = useMemo(() => new Set(Object.keys(groups)), [groups]);
+  const completedCount = completedKeys.size;
+  const groupIds = useMemo(() => personalityTraitGroups.map((g) => String(g.id)), []);
+
   if (!currentAssessment) {
     return (
       <div>
@@ -71,11 +76,6 @@ export function PersonalityPage() {
   const currentLeast = currentSelection?.least;
 
   const isPartialSelection = hasPartialSelection;
-
-  // Count completed groups
-  const completedKeys = useMemo(() => new Set(Object.keys(groups)), [groups]);
-  const completedCount = completedKeys.size;
-  const groupIds = useMemo(() => personalityTraitGroups.map((g) => String(g.id)), []);
 
   const handleChange = (most: number | undefined, least: number | undefined) => {
     setShowPartialWarning(false);
