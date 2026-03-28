@@ -16,6 +16,7 @@ import { ExperiencesPage } from "@/pages/ExperiencesPage";
 import { FinalResultsPage } from "@/pages/FinalResultsPage";
 import { ParticipantInfoPage } from "@/pages/ParticipantInfoPage";
 import { SettingsPage } from "@/pages/SettingsPage";
+import { CompletedQuestionsPage } from "@/pages/CompletedQuestionsPage";
 import { NotFoundPage } from "@/pages/NotFoundPage";
 
 const basename = import.meta.env.BASE_URL;
@@ -43,6 +44,7 @@ const router = createBrowserRouter(
         },
         { path: "assessment/experiences", element: <ExperiencesPage /> },
         { path: "assessment/results", element: <FinalResultsPage /> },
+        { path: "assessment/review", element: <CompletedQuestionsPage /> },
         { path: "settings", element: <SettingsPage /> },
         { path: "*", element: <NotFoundPage /> },
       ],
