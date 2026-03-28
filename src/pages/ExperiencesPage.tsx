@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { ProgressBar } from "@/components/data-display/ProgressBar";
@@ -28,19 +28,37 @@ export function ExperiencesPage() {
   }
 
   const experiences = currentAssessment.experiences;
+  const experiencesRef = useRef(experiences);
+  experiencesRef.current = experiences;
   const question = experienceQuestions[currentStep];
   const field = experienceFields[currentStep];
-  const currentValue = experiences[field] as string;
   const isLastStep = currentStep === experienceQuestions.length - 1;
 
-  const handleChange = (value: string) => {
-    const updatedExperiences: ExperiencesData = {
-      ...experiences,
-      [field]: value,
-      status: "in_progress",
-    };
-    save({ experiences: updatedExperiences });
-  };
+  // Local state for text input to decouple typing from DB round-trips
+  const [localText, setLocalText] = useState((experiences[field] as string) ?? "");
+  const prevStepRef = useRef(currentStep);
+
+  useEffect(() => {
+    if (prevStepRef.current !== currentStep) {
+      const f = experienceFields[currentStep];
+      setLocalText((experiences[f] as string) ?? "");
+      prevStepRef.current = currentStep;
+    }
+  }, [currentStep, experiences]);
+
+  const handleChange = useCallback(
+    (value: string) => {
+      setLocalText(value);
+      const exp = experiencesRef.current;
+      const updatedExperiences: ExperiencesData = {
+        ...exp,
+        [field]: value,
+        status: "in_progress",
+      };
+      save({ experiences: updatedExperiences });
+    },
+    [field, save],
+  );
 
   const handleNext = () => {
     if (!isLastStep) {
@@ -82,7 +100,7 @@ export function ExperiencesPage() {
 
         <div className="mb-8 flex-1">
           <TextArea
-            value={currentValue ?? ""}
+            value={localText}
             onChange={handleChange}
             placeholder="Type your answer here..."
           />
