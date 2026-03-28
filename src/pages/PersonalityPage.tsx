@@ -9,21 +9,10 @@ import { useAutoSave } from "@/hooks/useAutoSave";
 
 const TOTAL_GROUPS = personalityTraitGroups.length;
 
-function findResumeIndex(groups: Record<string, { most: number; least: number }>): number {
-  const completedCount = Object.keys(groups).length;
-  if (completedCount === 0) return 0;
-  // Find the first incomplete group
-  for (let i = 0; i < TOTAL_GROUPS; i++) {
-    if (!groups[String(personalityTraitGroups[i].id)]) return i;
-  }
-  // All done, stay on last group
-  return TOTAL_GROUPS - 1;
-}
-
 export function PersonalityPage() {
   const navigate = useNavigate();
   const { currentAssessment } = useAssessment();
-  const { save, saveImmediate } = useAutoSave(currentAssessment?.id);
+  const { saveImmediate } = useAutoSave(currentAssessment?.id);
 
   // Track groups in local state to avoid stale reads from the DB during rapid selections
   const [groups, setGroups] = useState<Record<string, { most: number; least: number }>>(
@@ -34,14 +23,16 @@ export function PersonalityPage() {
     groupsRef.current = groups;
   }, [groups]);
 
-  const [currentIndex, setCurrentIndex] = useState<number | null>(null);
+  const [currentIndex, setCurrentIndex] = useState<number>(
+    () => currentAssessment?.personality?.lastIndex ?? 0,
+  );
 
   // Sync from DB when assessment first becomes available (set-state-during-render pattern)
   const [syncedId, setSyncedId] = useState<string | undefined>(undefined);
   if (currentAssessment && currentAssessment.id !== syncedId) {
     const dbGroups = currentAssessment.personality?.groups ?? {};
     setGroups(dbGroups);
-    setCurrentIndex(findResumeIndex(dbGroups));
+    setCurrentIndex(currentAssessment.personality?.lastIndex ?? 0);
     setSyncedId(currentAssessment.id);
   }
 
@@ -49,13 +40,12 @@ export function PersonalityPage() {
     saveImmediate({ personality: { ...currentAssessment.personality, status: "in_progress" } });
   }
 
-  // Show loading until index is ready
-  if (currentIndex === null || !currentAssessment) {
+  if (!currentAssessment) {
     return (
       <div>
         <PageHeader title="Personality" backTo="/assessment" />
         <div className="p-6 text-center text-gray-500 dark:text-gray-400">
-          {currentAssessment ? "Loading..." : "No active assessment found."}
+          No active assessment found.
         </div>
       </div>
     );
@@ -76,19 +66,25 @@ export function PersonalityPage() {
       const updated = { ...groupsRef.current, [groupKey]: { most, least } };
       setGroups(updated);
       groupsRef.current = updated;
-      save({ personality: { status: "in_progress" as const, groups: updated } });
+
+      const nextIndex = currentIndex < TOTAL_GROUPS - 1 ? currentIndex + 1 : currentIndex;
+      const allDone = Object.keys(updated).length >= TOTAL_GROUPS;
+
+      // Save immediately - selections are discrete events, no need for debouncing
+      saveImmediate({
+        personality: {
+          status: allDone ? "complete" : "in_progress" as const,
+          groups: updated,
+          lastIndex: nextIndex,
+        },
+      });
 
       // Auto-advance after 300ms
       setTimeout(() => {
-        if (currentIndex < TOTAL_GROUPS - 1) {
-          setCurrentIndex((prev) => (prev ?? 0) + 1);
-        } else {
-          // All groups done - check completion
-          const allDone = Object.keys(updated).length >= TOTAL_GROUPS;
-          if (allDone) {
-            saveImmediate({ personality: { status: "complete", groups: updated } });
-            navigate("/assessment/personality/results");
-          }
+        if (allDone && currentIndex === TOTAL_GROUPS - 1) {
+          navigate("/assessment/personality/results");
+        } else if (currentIndex < TOTAL_GROUPS - 1) {
+          setCurrentIndex(nextIndex);
         }
       }, 300);
     } else {
@@ -98,20 +94,42 @@ export function PersonalityPage() {
         delete updated[groupKey];
         setGroups(updated);
         groupsRef.current = updated;
-        save({ personality: { status: "in_progress" as const, groups: updated } });
+        saveImmediate({
+          personality: {
+            status: "in_progress" as const,
+            groups: updated,
+            lastIndex: currentIndex,
+          },
+        });
       }
     }
   };
 
   const goBack = () => {
     if (currentIndex > 0) {
-      setCurrentIndex(currentIndex - 1);
+      const newIndex = currentIndex - 1;
+      setCurrentIndex(newIndex);
+      saveImmediate({
+        personality: {
+          status: currentAssessment.personality.status,
+          groups: groupsRef.current,
+          lastIndex: newIndex,
+        },
+      });
     }
   };
 
   const goForward = () => {
     if (currentIndex < TOTAL_GROUPS - 1) {
-      setCurrentIndex(currentIndex + 1);
+      const newIndex = currentIndex + 1;
+      setCurrentIndex(newIndex);
+      saveImmediate({
+        personality: {
+          status: currentAssessment.personality.status,
+          groups: groupsRef.current,
+          lastIndex: newIndex,
+        },
+      });
     }
   };
 
