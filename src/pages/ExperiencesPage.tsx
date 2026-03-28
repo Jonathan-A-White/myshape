@@ -22,34 +22,33 @@ export function ExperiencesPage() {
   const { save, saveImmediate } = useAutoSave(currentAssessment?.id);
   const [currentStep, setCurrentStep] = useState(0);
 
-  if (!currentAssessment) {
-    navigate("/");
-    return null;
-  }
-
-  const experiences = currentAssessment.experiences;
+  const experiences = currentAssessment?.experiences;
   const experiencesRef = useRef(experiences);
-  experiencesRef.current = experiences;
-  const question = experienceQuestions[currentStep];
   const field = experienceFields[currentStep];
   const isLastStep = currentStep === experienceQuestions.length - 1;
 
   // Local state for text input to decouple typing from DB round-trips
-  const [localText, setLocalText] = useState((experiences[field] as string) ?? "");
-  const prevStepRef = useRef(currentStep);
+  const [localText, setLocalText] = useState("");
 
   useEffect(() => {
-    if (prevStepRef.current !== currentStep) {
-      const f = experienceFields[currentStep];
-      setLocalText((experiences[f] as string) ?? "");
-      prevStepRef.current = currentStep;
-    }
-  }, [currentStep, experiences]);
+    experiencesRef.current = experiences;
+  }, [experiences]);
+
+  // Sync local text when step changes or data loads (adjust state during render)
+  const [prevStep, setPrevStep] = useState(currentStep);
+  const [initialized, setInitialized] = useState(false);
+  if (experiences && (!initialized || prevStep !== currentStep)) {
+    const f = experienceFields[currentStep];
+    setLocalText((experiences[f] as string) ?? "");
+    setPrevStep(currentStep);
+    setInitialized(true);
+  }
 
   const handleChange = useCallback(
     (value: string) => {
       setLocalText(value);
       const exp = experiencesRef.current;
+      if (!exp) return;
       const updatedExperiences: ExperiencesData = {
         ...exp,
         [field]: value,
@@ -60,10 +59,11 @@ export function ExperiencesPage() {
     [field, save],
   );
 
-  const handleNext = () => {
+  const handleNext = useCallback(() => {
     if (!isLastStep) {
       setCurrentStep(currentStep + 1);
     } else {
+      if (!experiences) return;
       const updatedExperiences: ExperiencesData = {
         ...experiences,
         status: "complete",
@@ -71,13 +71,20 @@ export function ExperiencesPage() {
       saveImmediate({ experiences: updatedExperiences });
       navigate("/assessment");
     }
-  };
+  }, [isLastStep, currentStep, experiences, saveImmediate, navigate]);
 
   const handleBack = () => {
     if (currentStep > 0) {
       setCurrentStep(currentStep - 1);
     }
   };
+
+  if (!currentAssessment) {
+    navigate("/");
+    return null;
+  }
+
+  const question = experienceQuestions[currentStep];
 
   return (
     <div className="flex min-h-screen flex-col bg-gray-50 dark:bg-gray-900">
