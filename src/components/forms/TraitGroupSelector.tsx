@@ -35,13 +35,31 @@ export function TraitGroupSelector({ traits, most: initialMost, least: initialLe
 
   return (
     <div className="space-y-3">
-      <p className="text-center text-sm text-gray-500 dark:text-gray-400">
-        {most === undefined
-          ? "Tap the trait MOST like you"
-          : least === undefined
-            ? "Now tap the trait LEAST like you"
-            : "Both selected! Tap to change."}
-      </p>
+      <div className="mb-2 rounded-lg bg-blue-50 p-3 text-center dark:bg-blue-900/30">
+        {most === undefined ? (
+          <>
+            <p className="text-base font-semibold text-blue-800 dark:text-blue-200">
+              Select the trait MOST like you
+            </p>
+            <p className="mt-1 text-xs text-blue-600 dark:text-blue-400">
+              You must pick both a MOST and a LEAST to continue
+            </p>
+          </>
+        ) : least === undefined ? (
+          <>
+            <p className="text-base font-semibold text-blue-800 dark:text-blue-200">
+              Now select the trait LEAST like you
+            </p>
+            <p className="mt-1 text-xs text-blue-600 dark:text-blue-400">
+              You must pick both a MOST and a LEAST to continue
+            </p>
+          </>
+        ) : (
+          <p className="text-base font-semibold text-green-700 dark:text-green-300">
+            Both selected! Tap to change.
+          </p>
+        )}
+      </div>
       {traits.map((trait, i) => {
         const isMost = most === i;
         const isLeast = least === i;

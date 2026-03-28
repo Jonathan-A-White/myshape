@@ -27,6 +27,9 @@ export function PersonalityPage() {
     () => currentAssessment?.personality?.lastIndex ?? 0,
   );
 
+  // Track whether user tried to navigate with a partial selection
+  const [showPartialWarning, setShowPartialWarning] = useState(false);
+
   // Sync from DB when assessment first becomes available (set-state-during-render pattern)
   const [syncedId, setSyncedId] = useState<string | undefined>(undefined);
   if (currentAssessment && currentAssessment.id !== syncedId) {
@@ -63,10 +66,16 @@ export function PersonalityPage() {
   const currentMost = currentSelection?.most;
   const currentLeast = currentSelection?.least;
 
+  // Both answered or neither — partial (one of two) blocks navigation
+  const hasMost = currentMost !== undefined;
+  const hasLeast = currentLeast !== undefined;
+  const isPartialSelection = hasMost !== hasLeast;
+
   // Count completed groups
   const completedCount = Object.keys(groups).length;
 
   const handleChange = (most: number | undefined, least: number | undefined) => {
+    setShowPartialWarning(false);
     if (most !== undefined && least !== undefined) {
       const updated = { ...groupsRef.current, [groupKey]: { most, least } };
       setGroups(updated);
@@ -111,7 +120,12 @@ export function PersonalityPage() {
   };
 
   const goBack = () => {
+    if (isPartialSelection) {
+      setShowPartialWarning(true);
+      return;
+    }
     if (currentIndex > 0) {
+      setShowPartialWarning(false);
       const newIndex = currentIndex - 1;
       setCurrentIndex(newIndex);
       saveImmediate({
@@ -125,7 +139,12 @@ export function PersonalityPage() {
   };
 
   const goForward = () => {
+    if (isPartialSelection) {
+      setShowPartialWarning(true);
+      return;
+    }
     if (currentIndex < TOTAL_GROUPS - 1) {
+      setShowPartialWarning(false);
       const newIndex = currentIndex + 1;
       setCurrentIndex(newIndex);
       saveImmediate({
@@ -158,18 +177,32 @@ export function PersonalityPage() {
           />
         </div>
 
+        {showPartialWarning && isPartialSelection && (
+          <div className="mt-4 rounded-lg border border-amber-300 bg-amber-50 p-3 text-center text-sm font-medium text-amber-800 dark:border-amber-500 dark:bg-amber-900/30 dark:text-amber-300">
+            Please select both MOST and LEAST — or clear your selection — before continuing.
+          </div>
+        )}
+
         <div className="mt-6 flex justify-between">
           <button
             onClick={goBack}
             disabled={currentIndex === 0}
-            className="rounded-lg px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 disabled:opacity-30 dark:text-gray-400 dark:hover:text-white"
+            className={`rounded-lg px-4 py-2 text-sm font-medium disabled:opacity-30 ${
+              isPartialSelection
+                ? "text-gray-400 dark:text-gray-500"
+                : "text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white"
+            }`}
           >
             Previous
           </button>
           <button
             onClick={goForward}
             disabled={currentIndex === TOTAL_GROUPS - 1}
-            className="rounded-lg px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 disabled:opacity-30 dark:text-gray-400 dark:hover:text-white"
+            className={`rounded-lg px-4 py-2 text-sm font-medium disabled:opacity-30 ${
+              isPartialSelection
+                ? "text-gray-400 dark:text-gray-500"
+                : "text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white"
+            }`}
           >
             Next
           </button>
