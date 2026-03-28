@@ -30,6 +30,9 @@ export function PersonalityPage() {
   // Track whether user tried to navigate with a partial selection
   const [showPartialWarning, setShowPartialWarning] = useState(false);
 
+  // Track whether the current group has a partial selection (only MOST or only LEAST picked)
+  const [hasPartialSelection, setHasPartialSelection] = useState(false);
+
   // Sync from DB when assessment first becomes available (set-state-during-render pattern)
   const [syncedId, setSyncedId] = useState<string | undefined>(undefined);
   if (currentAssessment && currentAssessment.id !== syncedId) {
@@ -66,16 +69,15 @@ export function PersonalityPage() {
   const currentMost = currentSelection?.most;
   const currentLeast = currentSelection?.least;
 
-  // Both answered or neither — partial (one of two) blocks navigation
-  const hasMost = currentMost !== undefined;
-  const hasLeast = currentLeast !== undefined;
-  const isPartialSelection = hasMost !== hasLeast;
+  const isPartialSelection = hasPartialSelection;
 
   // Count completed groups
   const completedCount = Object.keys(groups).length;
 
   const handleChange = (most: number | undefined, least: number | undefined) => {
     setShowPartialWarning(false);
+    const partial = (most !== undefined) !== (least !== undefined);
+    setHasPartialSelection(partial);
     if (most !== undefined && least !== undefined) {
       const updated = { ...groupsRef.current, [groupKey]: { most, least } };
       setGroups(updated);
@@ -126,6 +128,7 @@ export function PersonalityPage() {
     }
     if (currentIndex > 0) {
       setShowPartialWarning(false);
+      setHasPartialSelection(false);
       const newIndex = currentIndex - 1;
       setCurrentIndex(newIndex);
       saveImmediate({
@@ -145,6 +148,7 @@ export function PersonalityPage() {
     }
     if (currentIndex < TOTAL_GROUPS - 1) {
       setShowPartialWarning(false);
+      setHasPartialSelection(false);
       const newIndex = currentIndex + 1;
       setCurrentIndex(newIndex);
       saveImmediate({
