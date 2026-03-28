@@ -1,4 +1,4 @@
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { GiftScoreBar } from "@/components/data-display/GiftScoreBar";
 import { DISCChart } from "@/components/data-display/DISCChart";
@@ -206,6 +206,12 @@ export function FinalResultsPage() {
           >
             Email to Pastor/Leader
           </button>
+          <Link
+            to="/assessment/review"
+            className="block w-full rounded-lg border-2 border-gray-300 py-3 text-center font-semibold text-gray-600 dark:border-gray-600 dark:text-gray-300"
+          >
+            Review All Questions & Answers
+          </Link>
         </div>
       </div>
     </div>
