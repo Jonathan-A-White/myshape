@@ -38,10 +38,10 @@ export function HeartPage() {
   const [localText, setLocalText] = useState("");
   const currentQuestionId = step < 4 ? heartReflectionQuestions[step].id : null;
 
-  // Sync local text when step changes or when heart data loads initially
+  // Sync local text when step changes or heart data loads (adjust state during render)
   const [prevStep, setPrevStep] = useState(step);
-  const [initializedHeart, setInitializedHeart] = useState(false);
-  if (heart && (!initializedHeart || prevStep !== step)) {
+  const [initialized, setInitialized] = useState(false);
+  if (heart && (!initialized || prevStep !== step)) {
     const qId = step < 4 ? heartReflectionQuestions[step].id : null;
     if (qId) {
       setLocalText(
@@ -49,7 +49,7 @@ export function HeartPage() {
       );
     }
     setPrevStep(step);
-    setInitializedHeart(true);
+    setInitialized(true);
   }
 
   const handleTextChange = useCallback(
