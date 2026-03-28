@@ -36,9 +36,14 @@ export function PersonalityPage() {
     setSyncedId(currentAssessment.id);
   }
 
-  if (currentAssessment && currentAssessment.personality.status === "not_started") {
-    saveImmediate({ personality: { ...currentAssessment.personality, status: "in_progress" } });
-  }
+  // Mark personality as in_progress once (in an effect to avoid overwriting data during re-renders)
+  const statusInitRef = useRef(false);
+  useEffect(() => {
+    if (currentAssessment && currentAssessment.personality.status === "not_started" && !statusInitRef.current) {
+      statusInitRef.current = true;
+      saveImmediate({ personality: { ...currentAssessment.personality, status: "in_progress" } });
+    }
+  }, [currentAssessment, saveImmediate]);
 
   if (!currentAssessment) {
     return (
