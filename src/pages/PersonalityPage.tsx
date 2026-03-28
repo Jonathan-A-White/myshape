@@ -36,12 +36,20 @@ export function PersonalityPage() {
     setSyncedId(currentAssessment.id);
   }
 
-  // Mark personality as in_progress once (in an effect to avoid overwriting data during re-renders)
+  // Mark personality as in_progress once on mount.
+  // Uses groupsRef (local state) instead of currentAssessment.personality to avoid
+  // overwriting selections if the effect fires after a rapid user interaction.
   const statusInitRef = useRef(false);
   useEffect(() => {
     if (currentAssessment && currentAssessment.personality.status === "not_started" && !statusInitRef.current) {
       statusInitRef.current = true;
-      saveImmediate({ personality: { ...currentAssessment.personality, status: "in_progress" } });
+      saveImmediate({
+        personality: {
+          status: "in_progress",
+          groups: groupsRef.current,
+          lastIndex: currentAssessment.personality?.lastIndex ?? 0,
+        },
+      });
     }
   }, [currentAssessment, saveImmediate]);
 
@@ -93,19 +101,25 @@ export function PersonalityPage() {
         }
       }, 300);
     } else {
-      // Partial selection or deselection - remove from groups if incomplete
+      // Partial selection or deselection - update local state immediately
       if (most === undefined || least === undefined) {
         const updated = { ...groupsRef.current };
+        const wasComplete = groupKey in updated;
         delete updated[groupKey];
         setGroups(updated);
         groupsRef.current = updated;
-        saveImmediate({
-          personality: {
-            status: "in_progress" as const,
-            groups: updated,
-            lastIndex: currentIndex,
-          },
-        });
+        // Only persist to DB when actually removing a previously completed group.
+        // Skipping the save on first-tap (MOST) eliminates a race where this
+        // empty-groups write could overwrite a subsequent complete-selection save.
+        if (wasComplete) {
+          saveImmediate({
+            personality: {
+              status: "in_progress" as const,
+              groups: updated,
+              lastIndex: currentIndex,
+            },
+          });
+        }
       }
     }
   };
