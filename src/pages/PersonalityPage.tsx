@@ -1,7 +1,8 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { ProgressBar } from "@/components/data-display/ProgressBar";
+import { GroupDotIndicator } from "@/components/data-display/GroupDotIndicator";
 import { TraitGroupSelector } from "@/components/forms/TraitGroupSelector";
 import { personalityTraitGroups } from "@/core/staticData";
 import { useAssessment } from "@/contexts/AssessmentContext";
@@ -51,6 +52,11 @@ export function PersonalityPage() {
     }
   }, [currentAssessment, saveImmediate]);
 
+  // Count completed groups (must be before early return to satisfy Rules of Hooks)
+  const completedKeys = useMemo(() => new Set(Object.keys(groups)), [groups]);
+  const completedCount = completedKeys.size;
+  const groupIds = useMemo(() => personalityTraitGroups.map((g) => String(g.id)), []);
+
   if (!currentAssessment) {
     return (
       <div>
@@ -70,9 +76,6 @@ export function PersonalityPage() {
   const currentLeast = currentSelection?.least;
 
   const isPartialSelection = hasPartialSelection;
-
-  // Count completed groups
-  const completedCount = Object.keys(groups).length;
 
   const handleChange = (most: number | undefined, least: number | undefined) => {
     setShowPartialWarning(false);
@@ -167,8 +170,17 @@ export function PersonalityPage() {
       <div className="p-4">
         <ProgressBar current={completedCount} total={TOTAL_GROUPS} label={`Group ${currentIndex + 1} of ${TOTAL_GROUPS}`} />
 
-        <div className="mt-2 mb-4 text-center text-xs text-gray-400 dark:text-gray-500">
+        <div className="mt-2 mb-1 text-center text-xs text-gray-400 dark:text-gray-500">
           {completedCount} of {TOTAL_GROUPS} completed
+        </div>
+
+        <div className="mb-4">
+          <GroupDotIndicator
+            total={TOTAL_GROUPS}
+            currentIndex={currentIndex}
+            completedKeys={completedKeys}
+            groupIds={groupIds}
+          />
         </div>
 
         <div className="mx-auto max-w-lg">
