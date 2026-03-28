@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { ProgressBar } from "@/components/data-display/ProgressBar";
@@ -22,30 +22,48 @@ export function ExperiencesPage() {
   const { save, saveImmediate } = useAutoSave(currentAssessment?.id);
   const [currentStep, setCurrentStep] = useState(0);
 
-  if (!currentAssessment) {
-    navigate("/");
-    return null;
-  }
-
-  const experiences = currentAssessment.experiences;
-  const question = experienceQuestions[currentStep];
+  const experiences = currentAssessment?.experiences;
+  const experiencesRef = useRef(experiences);
   const field = experienceFields[currentStep];
-  const currentValue = experiences[field] as string;
   const isLastStep = currentStep === experienceQuestions.length - 1;
 
-  const handleChange = (value: string) => {
-    const updatedExperiences: ExperiencesData = {
-      ...experiences,
-      [field]: value,
-      status: "in_progress",
-    };
-    save({ experiences: updatedExperiences });
-  };
+  // Local state for text input to decouple typing from DB round-trips
+  const [localText, setLocalText] = useState("");
 
-  const handleNext = () => {
+  useEffect(() => {
+    experiencesRef.current = experiences;
+  }, [experiences]);
+
+  // Sync local text when step changes or data loads (adjust state during render)
+  const [prevStep, setPrevStep] = useState(currentStep);
+  const [initialized, setInitialized] = useState(false);
+  if (experiences && (!initialized || prevStep !== currentStep)) {
+    const f = experienceFields[currentStep];
+    setLocalText((experiences[f] as string) ?? "");
+    setPrevStep(currentStep);
+    setInitialized(true);
+  }
+
+  const handleChange = useCallback(
+    (value: string) => {
+      setLocalText(value);
+      const exp = experiencesRef.current;
+      if (!exp) return;
+      const updatedExperiences: ExperiencesData = {
+        ...exp,
+        [field]: value,
+        status: "in_progress",
+      };
+      save({ experiences: updatedExperiences });
+    },
+    [field, save],
+  );
+
+  const handleNext = useCallback(() => {
     if (!isLastStep) {
       setCurrentStep(currentStep + 1);
     } else {
+      if (!experiences) return;
       const updatedExperiences: ExperiencesData = {
         ...experiences,
         status: "complete",
@@ -53,13 +71,20 @@ export function ExperiencesPage() {
       saveImmediate({ experiences: updatedExperiences });
       navigate("/assessment");
     }
-  };
+  }, [isLastStep, currentStep, experiences, saveImmediate, navigate]);
 
   const handleBack = () => {
     if (currentStep > 0) {
       setCurrentStep(currentStep - 1);
     }
   };
+
+  if (!currentAssessment) {
+    navigate("/");
+    return null;
+  }
+
+  const question = experienceQuestions[currentStep];
 
   return (
     <div className="flex min-h-screen flex-col bg-gray-50 dark:bg-gray-900">
@@ -82,7 +107,7 @@ export function ExperiencesPage() {
 
         <div className="mb-8 flex-1">
           <TextArea
-            value={currentValue ?? ""}
+            value={localText}
             onChange={handleChange}
             placeholder="Type your answer here..."
           />
