@@ -28,7 +28,9 @@ export function HeartPage() {
 
   const heart = currentAssessment?.heart;
   const heartRef = useRef(heart);
-  heartRef.current = heart;
+  useEffect(() => {
+    heartRef.current = heart;
+  }, [heart]);
 
   const [step, setStep] = useState(0);
 
@@ -37,21 +39,18 @@ export function HeartPage() {
   const currentQuestionId = step < 4 ? heartReflectionQuestions[step].id : null;
 
   // Sync local text when step changes or when heart data loads initially
-  const prevStepRef = useRef(step);
-  const initializedRef = useRef(false);
-  useEffect(() => {
-    if (!heart) return;
-    if (!initializedRef.current || prevStepRef.current !== step) {
-      const qId = step < 4 ? heartReflectionQuestions[step].id : null;
-      if (qId) {
-        setLocalText(
-          heart.reflectionQuestions[qId as keyof typeof heart.reflectionQuestions] ?? "",
-        );
-      }
-      prevStepRef.current = step;
-      initializedRef.current = true;
+  const [prevStep, setPrevStep] = useState(step);
+  const [initializedHeart, setInitializedHeart] = useState(false);
+  if (heart && (!initializedHeart || prevStep !== step)) {
+    const qId = step < 4 ? heartReflectionQuestions[step].id : null;
+    if (qId) {
+      setLocalText(
+        heart.reflectionQuestions[qId as keyof typeof heart.reflectionQuestions] ?? "",
+      );
     }
-  }, [step, heart]);
+    setPrevStep(step);
+    setInitializedHeart(true);
+  }
 
   const handleTextChange = useCallback(
     (value: string) => {

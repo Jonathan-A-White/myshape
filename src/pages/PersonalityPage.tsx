@@ -30,27 +30,20 @@ export function PersonalityPage() {
     () => currentAssessment?.personality?.groups ?? {},
   );
   const groupsRef = useRef(groups);
-  groupsRef.current = groups;
-
-  // Sync from DB on first load (when assessment becomes available)
-  const initializedRef = useRef(false);
   useEffect(() => {
-    if (currentAssessment && !initializedRef.current) {
-      const dbGroups = currentAssessment.personality?.groups ?? {};
-      setGroups(dbGroups);
-      groupsRef.current = dbGroups;
-      initializedRef.current = true;
-    }
-  }, [currentAssessment]);
+    groupsRef.current = groups;
+  }, [groups]);
 
   const [currentIndex, setCurrentIndex] = useState<number | null>(null);
 
-  // Initialize currentIndex to resume position once groups are loaded
-  useEffect(() => {
-    if (currentIndex === null && initializedRef.current) {
-      setCurrentIndex(findResumeIndex(groupsRef.current));
-    }
-  }, [currentIndex, groups]);
+  // Sync from DB when assessment first becomes available (set-state-during-render pattern)
+  const [syncedId, setSyncedId] = useState<string | undefined>(undefined);
+  if (currentAssessment && currentAssessment.id !== syncedId) {
+    const dbGroups = currentAssessment.personality?.groups ?? {};
+    setGroups(dbGroups);
+    setCurrentIndex(findResumeIndex(dbGroups));
+    setSyncedId(currentAssessment.id);
+  }
 
   if (currentAssessment && currentAssessment.personality.status === "not_started") {
     saveImmediate({ personality: { ...currentAssessment.personality, status: "in_progress" } });
