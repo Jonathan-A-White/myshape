@@ -35,6 +35,7 @@ export interface AbilitiesData {
 export interface PersonalityData {
   status: SectionStatus;
   groups: Record<string, { most: number; least: number }>;
+  lastIndex?: number;
 }
 
 export interface ExperiencesData {
@@ -44,6 +45,7 @@ export interface ExperiencesData {
   hobbies: string;
   churchServing: string;
   painfulExperience: string;
+  lastStep?: number;
 }
 
 export interface Assessment {

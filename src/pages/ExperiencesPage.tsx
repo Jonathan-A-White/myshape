@@ -8,7 +8,7 @@ import { useAutoSave } from "@/hooks/useAutoSave";
 import { experienceQuestions } from "@/core/staticData";
 import type { ExperiencesData } from "@/contracts/types";
 
-const experienceFields: (keyof Omit<ExperiencesData, "status">)[] = [
+const experienceFields: (keyof Omit<ExperiencesData, "status" | "lastStep">)[] = [
   "studiedInSchool",
   "occupation",
   "hobbies",
@@ -20,7 +20,16 @@ export function ExperiencesPage() {
   const navigate = useNavigate();
   const { currentAssessment } = useAssessment();
   const { save, saveImmediate } = useAutoSave(currentAssessment?.id);
-  const [currentStep, setCurrentStep] = useState(0);
+  const [currentStep, setCurrentStep] = useState(
+    () => currentAssessment?.experiences?.lastStep ?? 0,
+  );
+
+  // Sync step from DB when assessment first becomes available
+  const [syncedId, setSyncedId] = useState<string | undefined>(undefined);
+  if (currentAssessment && currentAssessment.id !== syncedId) {
+    setCurrentStep(currentAssessment.experiences?.lastStep ?? 0);
+    setSyncedId(currentAssessment.id);
+  }
 
   const experiences = currentAssessment?.experiences;
   const experiencesRef = useRef(experiences);
@@ -53,15 +62,21 @@ export function ExperiencesPage() {
         ...exp,
         [field]: value,
         status: "in_progress",
+        lastStep: currentStep,
       };
       save({ experiences: updatedExperiences });
     },
-    [field, save],
+    [field, currentStep, save],
   );
 
   const handleNext = useCallback(() => {
     if (!isLastStep) {
-      setCurrentStep(currentStep + 1);
+      const nextStep = currentStep + 1;
+      setCurrentStep(nextStep);
+      const exp = experiencesRef.current;
+      if (exp) {
+        saveImmediate({ experiences: { ...exp, lastStep: nextStep } });
+      }
     } else {
       if (!experiences) return;
       const updatedExperiences: ExperiencesData = {
@@ -75,7 +90,12 @@ export function ExperiencesPage() {
 
   const handleBack = () => {
     if (currentStep > 0) {
-      setCurrentStep(currentStep - 1);
+      const prevStep2 = currentStep - 1;
+      setCurrentStep(prevStep2);
+      const exp = experiencesRef.current;
+      if (exp) {
+        saveImmediate({ experiences: { ...exp, lastStep: prevStep2 } });
+      }
     }
   };
 
