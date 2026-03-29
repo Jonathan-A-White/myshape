@@ -12,6 +12,7 @@ interface SectionCard {
   path: string;
   status: SectionStatus;
   detail: string;
+  reviewKey: string;
 }
 
 function statusBadge(status: SectionStatus) {
@@ -71,6 +72,7 @@ export function SectionHubPage() {
         : "/assessment/spiritual-gifts",
       status: currentAssessment.spiritualGifts.status,
       detail: `${answerCount} / 95 answers`,
+      reviewKey: "spiritual-gifts",
     },
     {
       letter: "H",
@@ -78,6 +80,7 @@ export function SectionHubPage() {
       path: "/assessment/heart",
       status: currentAssessment.heart.status,
       detail: currentAssessment.heart.status === "complete" ? "Complete" : currentAssessment.heart.status === "in_progress" ? "In Progress" : "Not Started",
+      reviewKey: "heart",
     },
     {
       letter: "A",
@@ -85,6 +88,7 @@ export function SectionHubPage() {
       path: "/assessment/abilities",
       status: currentAssessment.abilities.status,
       detail: `${selectedCount} / 5 selected`,
+      reviewKey: "abilities",
     },
     {
       letter: "P",
@@ -94,6 +98,7 @@ export function SectionHubPage() {
         : "/assessment/personality",
       status: currentAssessment.personality.status,
       detail: `${groupCount} / 24 groups`,
+      reviewKey: "personality",
     },
     {
       letter: "E",
@@ -101,6 +106,7 @@ export function SectionHubPage() {
       path: "/assessment/experiences",
       status: currentAssessment.experiences.status,
       detail: currentAssessment.experiences.status === "complete" ? "Complete" : currentAssessment.experiences.status === "in_progress" ? "In Progress" : "Not Started",
+      reviewKey: "experiences",
     },
   ];
 
@@ -111,26 +117,40 @@ export function SectionHubPage() {
       <PageHeader title="Assessment" backTo="/" />
       <div className="space-y-4 p-6">
         {sections.map((section) => (
-          <Link
+          <div
             key={section.letter}
-            to={section.path}
-            className="flex items-center gap-4 rounded-lg bg-white p-4 shadow transition-colors hover:bg-gray-50 dark:bg-gray-800 dark:hover:bg-gray-700"
+            className="rounded-lg bg-white shadow dark:bg-gray-800"
           >
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-primary text-lg font-bold text-white">
-              {section.letter}
-            </div>
-            <div className="min-w-0 flex-1">
-              <div className="flex items-center justify-between">
-                <h3 className="font-semibold text-gray-900 dark:text-white">
-                  {section.name}
-                </h3>
-                {statusBadge(section.status)}
+            <Link
+              to={section.path}
+              className="flex items-center gap-4 p-4 transition-colors hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg"
+            >
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-primary text-lg font-bold text-white">
+                {section.letter}
               </div>
-              <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                {section.detail}
-              </p>
-            </div>
-          </Link>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center justify-between">
+                  <h3 className="font-semibold text-gray-900 dark:text-white">
+                    {section.name}
+                  </h3>
+                  {statusBadge(section.status)}
+                </div>
+                <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                  {section.detail}
+                </p>
+              </div>
+            </Link>
+            {section.status === "complete" && (
+              <div className="border-t border-gray-100 px-4 py-2 dark:border-gray-700">
+                <Link
+                  to={`/assessment/review?section=${section.reviewKey}&from=hub`}
+                  className="text-xs font-medium text-primary hover:underline dark:text-blue-400"
+                >
+                  Review answers
+                </Link>
+              </div>
+            )}
+          </div>
         ))}
 
         <Link
