@@ -20,18 +20,9 @@ export function SettingsPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [email, setEmail] = useState(() => localStorage.getItem(EMAIL_KEY) || "");
-  const [storageUsed, setStorageUsed] = useState(0);
-  const [storageQuota, setStorageQuota] = useState(0);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
   const [showImportConfirm, setShowImportConfirm] = useState(false);
   const [pendingImport, setPendingImport] = useState<ReturnType<typeof validateExport> | null>(null);
-
-  useEffect(() => {
-    navigator.storage?.estimate?.().then((estimate) => {
-      setStorageUsed(estimate.usage || 0);
-      setStorageQuota(estimate.quota || 0);
-    });
-  }, []);
 
   function handleEmailChange(value: string) {
     setEmail(value);
@@ -92,10 +83,6 @@ export function SettingsPage() {
     }
   }
 
-  const usedMB = (storageUsed / (1024 * 1024)).toFixed(1);
-  const quotaMB = (storageQuota / (1024 * 1024)).toFixed(0);
-  const usagePercent = storageQuota > 0 ? (storageUsed / storageQuota) * 100 : 0;
-
   return (
     <div>
       <PageHeader title="Settings" backTo="/" />
@@ -154,20 +141,6 @@ export function SettingsPage() {
             placeholder="pastor@example.com"
             className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:border-primary focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400"
           />
-        </div>
-
-        {/* Storage */}
-        <div className="rounded-lg bg-white p-4 shadow dark:bg-gray-800">
-          <h3 className="font-semibold text-gray-900 dark:text-white">Storage</h3>
-          <p className="mb-3 text-sm text-gray-500 dark:text-gray-400">
-            {usedMB} MB used of {quotaMB} MB
-          </p>
-          <div className="h-2 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-gray-600">
-            <div
-              className="h-full rounded-full bg-primary transition-all"
-              style={{ width: `${Math.min(usagePercent, 100)}%` }}
-            />
-          </div>
         </div>
 
         {/* Data Management */}
