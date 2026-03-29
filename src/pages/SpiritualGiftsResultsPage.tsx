@@ -29,7 +29,7 @@ export function SpiritualGiftsResultsPage() {
     <div className="flex min-h-full flex-col">
       <PageHeader
         title="Spiritual Gifts Results"
-        backTo="/assessment/spiritual-gifts"
+        backTo="/assessment"
       />
 
       <div className="flex-1 px-4 py-6">
