@@ -8,16 +8,16 @@ import {
   personalityTraitGroups,
 } from "@/core/staticData";
 import { discMapping } from "@/core/disc";
-import type { Assessment } from "@/contracts/types";
+import type { Assessment, SectionStatus } from "@/contracts/types";
 
 type SectionKey = "spiritual-gifts" | "heart" | "abilities" | "personality" | "experiences";
 
-const sectionTabs: { key: SectionKey; label: string }[] = [
-  { key: "spiritual-gifts", label: "Spiritual Gifts" },
-  { key: "heart", label: "Heart" },
-  { key: "abilities", label: "Abilities" },
-  { key: "personality", label: "Personality" },
-  { key: "experiences", label: "Experiences" },
+const sectionTabs: { key: SectionKey; label: string; statusField: string }[] = [
+  { key: "spiritual-gifts", label: "Spiritual Gifts", statusField: "spiritualGifts" },
+  { key: "heart", label: "Heart", statusField: "heart" },
+  { key: "abilities", label: "Abilities", statusField: "abilities" },
+  { key: "personality", label: "Personality", statusField: "personality" },
+  { key: "experiences", label: "Experiences", statusField: "experiences" },
 ];
 
 const scaleLabels: Record<number, string> = {
@@ -243,12 +243,25 @@ function ExperiencesSection({ assessment }: { assessment: Assessment }) {
   );
 }
 
+function getSectionStatus(assessment: Assessment, field: string): SectionStatus {
+  return (assessment[field as keyof Assessment] as { status: SectionStatus }).status;
+}
+
+function NotStartedMessage() {
+  return (
+    <div className="py-12 text-center text-gray-500 dark:text-gray-400">
+      <p>This section hasn't been started yet.</p>
+    </div>
+  );
+}
+
 export function CompletedQuestionsPage() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { currentAssessment } = useAssessment();
 
   const activeSection = (searchParams.get("section") as SectionKey) || "spiritual-gifts";
+  const backTo = searchParams.get("from") === "hub" ? "/assessment" : "/assessment/results";
 
   if (!currentAssessment) {
     navigate("/");
@@ -259,43 +272,64 @@ export function CompletedQuestionsPage() {
 
   return (
     <div className="flex min-h-full flex-col">
-      <PageHeader title="Review Answers" backTo="/assessment/results" />
+      <PageHeader title="Review Answers" backTo={backTo} />
 
       {/* Section tabs */}
       <div className="border-b border-gray-200 dark:border-gray-700">
         <div className="flex overflow-x-auto px-2">
-          {sectionTabs.map((tab) => (
-            <button
-              key={tab.key}
-              onClick={() => setSearchParams({ section: tab.key })}
-              className={`whitespace-nowrap px-3 py-3 text-sm font-medium transition-colors ${
-                activeSection === tab.key
-                  ? "border-b-2 border-primary text-primary dark:text-blue-400"
-                  : "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
+          {sectionTabs.map((tab) => {
+            const status = getSectionStatus(assessment, tab.statusField);
+            return (
+              <button
+                key={tab.key}
+                onClick={() => setSearchParams({ section: tab.key, ...(searchParams.get("from") ? { from: searchParams.get("from")! } : {}) })}
+                className={`relative whitespace-nowrap px-3 py-3 text-sm font-medium transition-colors ${
+                  activeSection === tab.key
+                    ? "border-b-2 border-primary text-primary dark:text-blue-400"
+                    : status === "not_started"
+                      ? "text-gray-400 dark:text-gray-500"
+                      : "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                }`}
+              >
+                {tab.label}
+                {status === "complete" && (
+                  <span className="ml-1 inline-block h-1.5 w-1.5 rounded-full bg-green-500" />
+                )}
+                {status === "in_progress" && (
+                  <span className="ml-1 inline-block h-1.5 w-1.5 rounded-full bg-amber-500" />
+                )}
+              </button>
+            );
+          })}
         </div>
       </div>
 
       {/* Section content */}
       <div className="flex-1 p-4">
         {activeSection === "spiritual-gifts" && (
-          <SpiritualGiftsSection assessment={assessment} />
+          assessment.spiritualGifts.status === "not_started"
+            ? <NotStartedMessage />
+            : <SpiritualGiftsSection assessment={assessment} />
         )}
         {activeSection === "heart" && (
-          <HeartSection assessment={assessment} />
+          assessment.heart.status === "not_started"
+            ? <NotStartedMessage />
+            : <HeartSection assessment={assessment} />
         )}
         {activeSection === "abilities" && (
-          <AbilitiesSection assessment={assessment} />
+          assessment.abilities.status === "not_started"
+            ? <NotStartedMessage />
+            : <AbilitiesSection assessment={assessment} />
         )}
         {activeSection === "personality" && (
-          <PersonalitySection assessment={assessment} />
+          assessment.personality.status === "not_started"
+            ? <NotStartedMessage />
+            : <PersonalitySection assessment={assessment} />
         )}
         {activeSection === "experiences" && (
-          <ExperiencesSection assessment={assessment} />
+          assessment.experiences.status === "not_started"
+            ? <NotStartedMessage />
+            : <ExperiencesSection assessment={assessment} />
         )}
       </div>
     </div>
