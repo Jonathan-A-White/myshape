@@ -12,7 +12,6 @@ interface SectionCard {
   path: string;
   status: SectionStatus;
   detail: string;
-  reviewKey: string;
 }
 
 function statusBadge(status: SectionStatus) {
@@ -67,12 +66,9 @@ export function SectionHubPage() {
     {
       letter: "S",
       name: "Spiritual Gifts",
-      path: currentAssessment.spiritualGifts.status === "complete"
-        ? "/assessment/spiritual-gifts/results"
-        : "/assessment/spiritual-gifts",
+      path: "/assessment/spiritual-gifts",
       status: currentAssessment.spiritualGifts.status,
       detail: `${answerCount} / 95 answers`,
-      reviewKey: "spiritual-gifts",
     },
     {
       letter: "H",
@@ -80,7 +76,6 @@ export function SectionHubPage() {
       path: "/assessment/heart",
       status: currentAssessment.heart.status,
       detail: currentAssessment.heart.status === "complete" ? "Complete" : currentAssessment.heart.status === "in_progress" ? "In Progress" : "Not Started",
-      reviewKey: "heart",
     },
     {
       letter: "A",
@@ -88,17 +83,13 @@ export function SectionHubPage() {
       path: "/assessment/abilities",
       status: currentAssessment.abilities.status,
       detail: `${selectedCount} / 5 selected`,
-      reviewKey: "abilities",
     },
     {
       letter: "P",
       name: "Personality",
-      path: currentAssessment.personality.status === "complete"
-        ? "/assessment/personality/results"
-        : "/assessment/personality",
+      path: "/assessment/personality",
       status: currentAssessment.personality.status,
       detail: `${groupCount} / 24 groups`,
-      reviewKey: "personality",
     },
     {
       letter: "E",
@@ -106,7 +97,6 @@ export function SectionHubPage() {
       path: "/assessment/experiences",
       status: currentAssessment.experiences.status,
       detail: currentAssessment.experiences.status === "complete" ? "Complete" : currentAssessment.experiences.status === "in_progress" ? "In Progress" : "Not Started",
-      reviewKey: "experiences",
     },
   ];
 
@@ -143,10 +133,10 @@ export function SectionHubPage() {
             {section.status === "complete" && (
               <div className="border-t border-gray-100 px-4 py-2 dark:border-gray-700">
                 <Link
-                  to={`/assessment/review?section=${section.reviewKey}&from=hub`}
+                  to={section.path}
                   className="text-xs font-medium text-primary hover:underline dark:text-blue-400"
                 >
-                  Review answers
+                  Edit answers
                 </Link>
               </div>
             )}
