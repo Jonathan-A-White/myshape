@@ -30,7 +30,7 @@ export function AbilitiesPage() {
   const handleComplete = () => {
     const updatedAbilities = { ...abilities, status: "complete" as const };
     saveImmediate({ abilities: updatedAbilities });
-    navigate("/assessment");
+    navigate("/assessment/abilities/results");
   };
 
   return (

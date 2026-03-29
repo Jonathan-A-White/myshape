@@ -10,6 +10,7 @@ import { SpiritualGiftsPage } from "@/pages/SpiritualGiftsPage";
 import { SpiritualGiftsResultsPage } from "@/pages/SpiritualGiftsResultsPage";
 import { HeartPage } from "@/pages/HeartPage";
 import { AbilitiesPage } from "@/pages/AbilitiesPage";
+import { AbilitiesResultsPage } from "@/pages/AbilitiesResultsPage";
 import { PersonalityPage } from "@/pages/PersonalityPage";
 import { PersonalityResultsPage } from "@/pages/PersonalityResultsPage";
 import { ExperiencesPage } from "@/pages/ExperiencesPage";
@@ -37,6 +38,10 @@ const router = createBrowserRouter(
         },
         { path: "assessment/heart", element: <HeartPage /> },
         { path: "assessment/abilities", element: <AbilitiesPage /> },
+        {
+          path: "assessment/abilities/results",
+          element: <AbilitiesResultsPage />,
+        },
         { path: "assessment/personality", element: <PersonalityPage /> },
         {
           path: "assessment/personality/results",

@@ -83,6 +83,7 @@ export function SectionHubPage() {
       letter: "A",
       name: "Abilities",
       path: "/assessment/abilities",
+      resultsPath: "/assessment/abilities/results",
       status: currentAssessment.abilities.status,
       detail: `${selectedCount} / 5 selected`,
     },
