@@ -10,6 +10,7 @@ interface SectionCard {
   letter: string;
   name: string;
   path: string;
+  resultsPath?: string;
   status: SectionStatus;
   detail: string;
 }
@@ -67,6 +68,7 @@ export function SectionHubPage() {
       letter: "S",
       name: "Spiritual Gifts",
       path: "/assessment/spiritual-gifts",
+      resultsPath: "/assessment/spiritual-gifts/results",
       status: currentAssessment.spiritualGifts.status,
       detail: `${answerCount} / 95 answers`,
     },
@@ -88,6 +90,7 @@ export function SectionHubPage() {
       letter: "P",
       name: "Personality",
       path: "/assessment/personality",
+      resultsPath: "/assessment/personality/results",
       status: currentAssessment.personality.status,
       detail: `${groupCount} / 24 groups`,
     },
@@ -112,7 +115,7 @@ export function SectionHubPage() {
             className="rounded-lg bg-white shadow dark:bg-gray-800"
           >
             <Link
-              to={section.path}
+              to={section.status === "complete" && section.resultsPath ? section.resultsPath : section.path}
               className="flex items-center gap-4 p-4 transition-colors hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg"
             >
               <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-primary text-lg font-bold text-white">
@@ -131,7 +134,15 @@ export function SectionHubPage() {
               </div>
             </Link>
             {section.status === "complete" && (
-              <div className="border-t border-gray-100 px-4 py-2 dark:border-gray-700">
+              <div className="flex gap-4 border-t border-gray-100 px-4 py-2 dark:border-gray-700">
+                {section.resultsPath && (
+                  <Link
+                    to={section.resultsPath}
+                    className="text-xs font-medium text-primary hover:underline dark:text-blue-400"
+                  >
+                    View results
+                  </Link>
+                )}
                 <Link
                   to={section.path}
                   className="text-xs font-medium text-primary hover:underline dark:text-blue-400"
