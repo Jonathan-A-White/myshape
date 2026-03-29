@@ -182,7 +182,7 @@ export function SettingsPage() {
         <div className="rounded-lg bg-white p-4 shadow dark:bg-gray-800">
           <h3 className="font-semibold text-gray-900 dark:text-white">About</h3>
           <p className="text-sm text-gray-500 dark:text-gray-400">
-            MySHAPE v1.0.0
+            MySHAPE v{__APP_VERSION__}
           </p>
           <p className="text-sm text-gray-500 dark:text-gray-400">
             Offline-first &bull; IndexedDB &bull; No data leaves your device
