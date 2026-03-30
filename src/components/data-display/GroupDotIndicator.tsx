@@ -7,6 +7,8 @@ interface GroupDotIndicatorProps {
   currentIndex: number;
   completedKeys: Set<string>;
   groupIds: string[];
+  /** Label for skipped items (default: "group"/"groups") */
+  skippedLabel?: [string, string];
 }
 
 export const GroupDotIndicator = memo(function GroupDotIndicator({
@@ -14,6 +16,7 @@ export const GroupDotIndicator = memo(function GroupDotIndicator({
   currentIndex,
   completedKeys,
   groupIds,
+  skippedLabel = ["group", "groups"],
 }: GroupDotIndicatorProps) {
   const getStatus = (index: number): GroupStatus => {
     if (index === currentIndex) return "current";
@@ -49,7 +52,7 @@ export const GroupDotIndicator = memo(function GroupDotIndicator({
       </div>
       {skippedCount > 0 && (
         <p className="mt-2 text-center text-xs text-amber-500 dark:text-amber-400">
-          {skippedCount} skipped {skippedCount === 1 ? "group" : "groups"}
+          {skippedCount} skipped {skippedCount === 1 ? skippedLabel[0] : skippedLabel[1]}
         </p>
       )}
     </div>

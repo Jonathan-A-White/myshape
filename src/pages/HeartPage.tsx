@@ -4,6 +4,7 @@ import { PageHeader } from "@/components/layout/PageHeader";
 import { TextArea } from "@/components/forms/TextArea";
 import { ChipGrid } from "@/components/forms/ChipGrid";
 import { ProgressBar } from "@/components/data-display/ProgressBar";
+import { GroupDotIndicator } from "@/components/data-display/GroupDotIndicator";
 import { useAssessment } from "@/contexts/AssessmentContext";
 import { useAutoSave } from "@/hooks/useAutoSave";
 import {
@@ -19,6 +20,12 @@ const stepTitles = [
   ...heartReflectionQuestions.map(q => q.label),
   "People to Serve",
   "Issues & Causes",
+];
+
+const stepIds = [
+  ...heartReflectionQuestions.map(q => q.id),
+  "peopleToServe",
+  "issuesAndCauses",
 ];
 
 export function HeartPage() {
@@ -111,6 +118,19 @@ export function HeartPage() {
     return filled;
   }, [heart]);
 
+  const completedStepKeys = useMemo(() => {
+    const keys = new Set<string>();
+    if (!heart) return keys;
+    for (const q of heartReflectionQuestions) {
+      if (heart.reflectionQuestions[q.id as keyof typeof heart.reflectionQuestions]?.trim()) {
+        keys.add(q.id);
+      }
+    }
+    if (heart.peopleToServe.length === 3) keys.add("peopleToServe");
+    if (heart.issuesAndCauses.length === 3) keys.add("issuesAndCauses");
+    return keys;
+  }, [heart]);
+
   const handleNext = () => {
     if (step < TOTAL_STEPS - 1) {
       setStep(step + 1);
@@ -152,6 +172,13 @@ export function HeartPage() {
         {/* Progress */}
         <div className="mb-6">
           <ProgressBar current={progress} total={TOTAL_STEPS} label={`Step ${step + 1} of ${TOTAL_STEPS}`} />
+          <GroupDotIndicator
+            total={TOTAL_STEPS}
+            currentIndex={step}
+            completedKeys={completedStepKeys}
+            groupIds={stepIds}
+            skippedLabel={["question", "questions"]}
+          />
         </div>
 
         {/* Step title */}
