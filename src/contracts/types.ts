@@ -25,6 +25,7 @@ export interface HeartData {
   };
   peopleToServe: string[];
   issuesAndCauses: string[];
+  lastStep?: number;
 }
 
 export interface AbilitiesData {

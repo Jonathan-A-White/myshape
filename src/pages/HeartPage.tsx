@@ -39,7 +39,14 @@ export function HeartPage() {
     heartRef.current = heart;
   }, [heart]);
 
-  const [step, setStep] = useState(0);
+  const [step, setStep] = useState(() => heart?.lastStep ?? 0);
+
+  // Sync step from DB when assessment first becomes available
+  const [syncedId, setSyncedId] = useState<string | undefined>(undefined);
+  if (currentAssessment && currentAssessment.id !== syncedId) {
+    setStep(currentAssessment.heart?.lastStep ?? 0);
+    setSyncedId(currentAssessment.id);
+  }
 
   // Local state for the current text input to decouple typing from DB round-trips
   const [localText, setLocalText] = useState("");
@@ -67,6 +74,7 @@ export function HeartPage() {
       const updated: HeartData = {
         ...h,
         status: "in_progress",
+        lastStep: step,
         reflectionQuestions: {
           ...h.reflectionQuestions,
           [currentQuestionId]: value,
@@ -74,7 +82,7 @@ export function HeartPage() {
       };
       save({ heart: updated });
     },
-    [currentQuestionId, save],
+    [currentQuestionId, step, save],
   );
 
   const updatePeopleToServe = useCallback(
@@ -84,11 +92,12 @@ export function HeartPage() {
       const updated: HeartData = {
         ...h,
         status: "in_progress",
+        lastStep: step,
         peopleToServe: selected,
       };
       save({ heart: updated });
     },
-    [save],
+    [step, save],
   );
 
   const updateIssuesAndCauses = useCallback(
@@ -98,11 +107,12 @@ export function HeartPage() {
       const updated: HeartData = {
         ...h,
         status: "in_progress",
+        lastStep: step,
         issuesAndCauses: selected,
       };
       save({ heart: updated });
     },
-    [save],
+    [step, save],
   );
 
   const progress = useMemo(() => {
@@ -133,13 +143,23 @@ export function HeartPage() {
 
   const handleNext = () => {
     if (step < TOTAL_STEPS - 1) {
-      setStep(step + 1);
+      const nextStep = step + 1;
+      setStep(nextStep);
+      const h = heartRef.current;
+      if (h) {
+        saveImmediate({ heart: { ...h, lastStep: nextStep } });
+      }
     }
   };
 
   const handleBack = () => {
     if (step > 0) {
-      setStep(step - 1);
+      const prevStepVal = step - 1;
+      setStep(prevStepVal);
+      const h = heartRef.current;
+      if (h) {
+        saveImmediate({ heart: { ...h, lastStep: prevStepVal } });
+      }
     }
   };
 
