@@ -145,14 +145,10 @@ export function HeartPage() {
     if (step < TOTAL_STEPS - 1) {
       const nextStep = step + 1;
       setStep(nextStep);
-<<<<<<< HEAD
       const h = heartRef.current;
       if (h) {
         saveImmediate({ heart: { ...h, lastStep: nextStep } });
       }
-=======
-      save({ heart: { ...heartRef.current!, lastStep: nextStep } });
->>>>>>> fd99029 (Save and restore Heart assessment step position)
     }
   };
 
@@ -160,14 +156,10 @@ export function HeartPage() {
     if (step > 0) {
       const prevStepVal = step - 1;
       setStep(prevStepVal);
-<<<<<<< HEAD
       const h = heartRef.current;
       if (h) {
         saveImmediate({ heart: { ...h, lastStep: prevStepVal } });
       }
-=======
-      save({ heart: { ...heartRef.current!, lastStep: prevStepVal } });
->>>>>>> fd99029 (Save and restore Heart assessment step position)
     }
   };
 
