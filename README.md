@@ -1,4 +1,4 @@
-Docs: [Module map](docs/module-map.md) (modules, collisions, proposed refactors, library candidates) · [PWA best practices](docs/pwa-best-practices.md)
+Docs: [Module map](docs/module-map.md) (modules, collisions, proposed refactors, library candidates) · [PWA best practices](docs/pwa-best-practices.md) · [Best-practices audit](docs/best-practices-audit.md)
 
 # React + TypeScript + Vite
 
