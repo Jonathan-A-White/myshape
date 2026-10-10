@@ -1,3 +1,5 @@
+Docs: [Module map](docs/module-map.md) (modules, collisions, proposed refactors, library candidates) · [PWA best practices](docs/pwa-best-practices.md)
+
 # React + TypeScript + Vite
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
